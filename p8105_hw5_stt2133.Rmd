@@ -29,10 +29,33 @@ scale_fill_discrete = scale_fill_viridis_d
 
 ## Problem 1: Shared birthdays
 
+The `shared_bday`function below randomly samples $n$ birthdays from 365 equally 
+likely days and returns `TRUE` if at least one birthday is repeated.
+
 ```{r bday-function}
 shared_bday = function(n) {
   bdays = sample(1:365, size = n, replace = TRUE)
   repeated_bday = length(unique(bdays)) < n
   return(repeated_bday)
 }
+```
+
+Next, I run the function 10,000 times for each group size from 2 to 50 and 
+average the results to estimate the probability of a shared birthday.
+
+```{r bday-sim}
+set.seed(1118)
+
+bday_sim =
+  expand_grid(
+    group_size = 2:50, 
+    iter = 1:10000
+  ) |>
+  mutate(
+    repeated = map_lgl(group_size, shared_bday))
+
+bday_results =
+  bday_sim |>
+  group_by(group_size) |>
+  summarize(prob_of_repeat = mean(repeated))
 ```
