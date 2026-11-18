@@ -1,7 +1,7 @@
 ---
 title: "Homework 5 (p8105)"
 author: "Sanyu Takirambudde (stt2133)"
-date: '`r format(Sys.time(), "%Y-%m-%d")`'
+date: "2026-11-18"
 output: github_document
 ---
 
@@ -9,7 +9,7 @@ output: github_document
 library(tidyverse)
 
 knitr::opts_chunk$set(
-  collapse = TRUE, 
+  collapse = TRUE,
   message = FALSE,
   fig.width = 9,
   fig.asp = .6,
@@ -25,4 +25,14 @@ options(
 
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
+```
+
+## Problem 1: Shared birthdays
+
+```{r bday-function}
+shared_bday = function(n) {
+  bdays = sample(1:365, size = n, replace = TRUE)
+  repeated_bday = length(unique(bdays)) < n
+  return(repeated_bday)
+}
 ```
