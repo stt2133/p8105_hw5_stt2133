@@ -75,3 +75,17 @@ bday_results |>
 
 The probability of a shared birthday rises quickly and non-linearly with group 
 size. It is near zero for very small groups (`r pull(filter(bday_results, group_size == 2), prob_of_repeat)` with 2 people), crosses 0.5 at a group size of `r bday_results |> filter(prob_of_repeat >= 0.5) |> pull(group_size) |> min()`, and reaches `r pull(filter(bday_results, group_size == 50), prob_of_repeat)` with 50 people. 
+
+## Problem 2: Longitudinal study
+
+### Import data
+```{r study-import}
+study_df =
+  tibble(
+    file_name = list.files("data/")
+  ) |>
+  mutate(
+    path = str_c("data/", file_name),
+    data = map(path, read_csv)
+  )
+```
