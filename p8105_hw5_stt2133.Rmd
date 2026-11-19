@@ -46,11 +46,12 @@ set.seed(1118)
 
 bday_sim =
   expand_grid(
-    group_size = 2:50, 
+    group_size = 2:50,
     iter = 1:10000
   ) |>
   mutate(
-    repeated = map_lgl(group_size, shared_bday))
+    repeated = map_lgl(group_size, shared_bday)
+  )
 
 bday_results =
   bday_sim |>
@@ -71,11 +72,12 @@ bday_results |>
   )
 ```
 
-The probability of a shared birthday rises quickly and non-linearly with groupsize. It is near zero for very small groups (`r pull(filter(bday_results, group_size == 2), prob_of_repeat)` with 2 people), crosses 0.5 at a group size of `r bday_results |> filter(prob_of_repeat >= 0.5) |> pull(group_size) |> min()`, and reaches `r pull(filter(bday_results, group_size == 50), prob_of_repeat)` with 50 people. 
+The probability of a shared birthday rises quickly and non-linearly with group size. It is near zero for very small groups (`r round(pull(filter(bday_results, group_size == 2), prob_of_repeat), 3)` with 2 people), crosses 0.5 at a group size of `r bday_results |> filter(prob_of_repeat >= 0.5) |> pull(group_size) |> min()`, and reaches `r round(pull(filter(bday_results, group_size == 50), prob_of_repeat), 3)` with 50 people.
 
 ## Problem 2: Longitudinal study
 
 ### Import data
+
 ```{r study-import}
 study_files =
   tibble(
@@ -88,6 +90,7 @@ study_files =
 ```
 
 ### Tidy data
+
 ```{r study-tidy}
 study_df =
   study_files |>
@@ -114,13 +117,14 @@ study_df =
 ```
 
 ### Spaghetti plot
+
 ```{r spaghetti-plot}
 study_df |>
   ggplot(aes(x = week, y = observation, group = participant, color = arm)) +
   geom_line(alpha = 0.75) +
   geom_point(alpha = 0.75) +
-  facet_grid(. ~ arm) +
   scale_x_continuous(breaks = 1:8) +
+  scale_color_viridis_d(end = 0.75)
   labs(
     title = "Weekly observations for each subject, by study arm",
     x = "Week",
@@ -138,8 +142,8 @@ At week 1, the observations from the two arms look similar, with overlapping val
 The `t_test_sim` function below generates a dataset of size $n = 30$ from a Normal distribution with $\sigma = 5$. The function then performs a one-sample t-test of $H_0: \mu = 0$ and extracts the sample mean and p-value.
 
 ```{r t-test-function}
-t_test_sim = function(mu) {
-  sample_data = rnorm(n = 30, mean = mu, sd = 5)
+t_test_sim = function(mu, n = 30, sigma = 5) {
+  sample_data = rnorm(n, mean = mu, sd = sigma)
 
   t_test_result = 
     t.test(sample_data, mu = 0) |>
@@ -163,7 +167,7 @@ sim_results_df =
   mutate(reject = p_value < 0.05)
 ```
 
-```{r power_results}
+```{r power-results}
 power_results =
   sim_results_df |>
   group_by(true_mu) |>
@@ -174,7 +178,12 @@ power_results =
   )
 
 power_results |>
-  knitr::kable(digits = 3)
+  knitr::kable(
+    digits = 3,
+    col.names = c(
+      "True μ", "Power", "Avg. μ̂ (all)", "Avg. μ̂ (null rejected)"
+    )
+  )
 ```
 
 ### Effect size and power
@@ -192,11 +201,12 @@ power_results |>
     y = "Power"
   )
 ```
-Power increases with effect size. When the true mean is 0, the null hypothesis is true and the rejection proportion is `r power_results |> filter(true_mu == 0) |> pull(rejection_prop) |> round(4)`, which aligns closely with the pre-specified type I error rate of 0.05. As the true mean moves away from 0, the effect size ($\mu / \sigma$) increases and the test rejects the null hypothesis more frequently. With sample size and standard deviation held constant, a larger mean generates a stronger signal relative to the standard error. Specifically, power rises from `r power_results |> filter(true_mu == 1) |> pull(rejection_prop) |> round(4)` at $\mu = 1$ to `r power_results |> filter(true_mu == 2) |> pull(rejection_prop) |> round(4)` at $\mu = 2$, reaches `r power_results |> filter(true_mu == 3) |> pull(rejection_prop) |> round(4)` at $\mu = 3$, and approaches 1 for $\mu \ge 4$. Overall, the relationship is S-shaped as power climbs steeply across moderate effect sizes before leveling off near 1 once the effect is large relative to sampling variability.
+
+Power increases with effect size. When the true mean is 0, the null hypothesis is true and the rejection proportion is `r power_results |> filter(true_mu == 0) |> pull(rejection_prop) |> round(3)`, which aligns closely with the pre-specified type I error rate of 0.05. As the true mean moves away from 0, the effect size ($\mu / \sigma$) increases and the test rejects the null hypothesis more frequently. With sample size and standard deviation held constant, a larger mean generates a stronger signal relative to the standard error. Specifically, power rises from `r power_results |> filter(true_mu == 1) |> pull(rejection_prop) |> round(3)` at $\mu = 1$ to `r power_results |> filter(true_mu == 2) |> pull(rejection_prop) |> round(3)` at $\mu = 2$, reaches `r power_results |> filter(true_mu == 3) |> pull(rejection_prop) |> round(3)` at $\mu = 3$, and approaches 1 for $\mu \ge 4$. Overall, the relationship is S-shaped as power climbs steeply across moderate effect sizes before leveling off near 1 once the effect is large relative to sampling variability.
 
 ### Average estimates vs. true mean
 
-```{r mu_plot}
+```{r mu-plot}
 power_results |>
   select(true_mu, avg_mu_hat, avg_mu_hat_rejected) |>
   pivot_longer(
@@ -215,14 +225,15 @@ power_results |>
   geom_line() +
   scale_x_continuous(breaks = 0:6) +
   scale_y_continuous(breaks = 0:6) +
+  scale_color_viridis_d(end = 0.75) +
   labs(
     title = "Average estimated mean vs. true mean",
-    x = "True mean (μ)",
-    y = "Average estimated mean (μ̂)",
+    x = "True mean",
+    y = "Average estimated mean",
     color = "Samples included"
   )
 ```
 
-Across all samples, the average estimated mean is approximately equal to the true mean, consistent with the sample mean being unbiased. Among samples where the null hypothesis was rejected, the average estimated mean is larger than the true mean for small positive effects. For example, the average estimate conditioned on rejection is approximately `r power_results |> filter(true_mu == 1) |> pull(avg_mu_hat_rejected) |> round(4)` when $\mu = 1$ and `r power_results |> filter(true_mu == 2) |> pull(avg_mu_hat_rejected) |> round(4)` when $\mu = 2$.
+Across all samples, the average estimated mean is approximately equal to the true mean, consistent with the sample mean being unbiased. Among samples where the null hypothesis was rejected, the average estimated mean is larger than the true mean for small positive effects. For example, the average estimate conditioned on rejection is approximately `r power_results |> filter(true_mu == 1) |> pull(avg_mu_hat_rejected) |> formatC(format = "f", digits = 3)` when $\mu = 1$ and `r power_results |> filter(true_mu == 2) |> pull(avg_mu_hat_rejected) |> round(3)` when $\mu = 2$.
 
-The two-sided t-test rejects $H_0: \mu = 0$ when the sample mean is sufficiently far from zero (relative to its estimated standard error). When the true positive effect is small, selecting significant results disproportionately retains samples with unusually large positive estimates, although significant negative estimates and underestimates can also occur. This selection inflates the conditional average. As the true mean increases (from $\mu \ge 4$) and power approaches one, almost all samples are retained, so the conditional (Null rejected samples) and unconditional (All samples) averages become nearly identical. When $\mu = 0$, the rejected samples are split between sufficiently extreme positive and negative estimates, so the average estimate among only those stay near 0 ($\hat{\mu} =$ `r power_results |> filter(true_mu == 0) |> pull(avg_mu_hat_rejected) |> round(4)`).
+The two-sided t-test rejects $H_0: \mu = 0$ when the sample mean is sufficiently far from zero (relative to its estimated standard error). When the true positive effect is small, selecting significant results disproportionately retains samples with unusually large positive estimates, although significant negative estimates and underestimates can also occur. This selection inflates the conditional average. As the true mean increases (for $\mu \ge 4$) and power approaches one, almost all samples are retained, so the conditional (*Null rejected samples*) and unconditional (*All samples*) averages become nearly identical. When $\mu = 0$, the rejected samples are split between sufficiently extreme positive and negative estimates, so the average estimate among only those stays near 0 ($\hat{\mu} =$ `r power_results |> filter(true_mu == 0) |> pull(avg_mu_hat_rejected) |> round(3)`).
