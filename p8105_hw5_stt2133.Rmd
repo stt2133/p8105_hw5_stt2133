@@ -29,8 +29,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 ## Problem 1: Shared birthdays
 
-The `shared_bday` function below randomly samples $n$ birthdays from 365 equally 
-likely days and returns `TRUE` if at least one birthday is repeated.
+The `shared_bday` function below randomly samples $n$ birthdays from 365 equally likely days and returns `TRUE` if at least one birthday is repeated.
 
 ```{r bday-function}
 shared_bday = function(n) {
@@ -40,8 +39,7 @@ shared_bday = function(n) {
 }
 ```
 
-Next, I run the function 10,000 times for each group size from 2 to 50 and 
-average the results to estimate the probability of a shared birthday.
+Next, I run the function 10,000 times for each group size from 2 to 50 and average the results to estimate the probability of a shared birthday.
 
 ```{r bday-sim}
 set.seed(1118)
@@ -73,8 +71,7 @@ bday_results |>
   )
 ```
 
-The probability of a shared birthday rises quickly and non-linearly with group 
-size. It is near zero for very small groups (`r pull(filter(bday_results, group_size == 2), prob_of_repeat)` with 2 people), crosses 0.5 at a group size of `r bday_results |> filter(prob_of_repeat >= 0.5) |> pull(group_size) |> min()`, and reaches `r pull(filter(bday_results, group_size == 50), prob_of_repeat)` with 50 people. 
+The probability of a shared birthday rises quickly and non-linearly with groupsize. It is near zero for very small groups (`r pull(filter(bday_results, group_size == 2), prob_of_repeat)` with 2 people), crosses 0.5 at a group size of `r bday_results |> filter(prob_of_repeat >= 0.5) |> pull(group_size) |> min()`, and reaches `r pull(filter(bday_results, group_size == 50), prob_of_repeat)` with 50 people. 
 
 ## Problem 2: Longitudinal study
 
@@ -98,10 +95,9 @@ study_df =
   separate(file_name, into = c("arm", "subject_id"), sep = "_") |>
   mutate(
     participant = str_c(arm, subject_id, sep = "-"),
-    arm = case_match(
-      arm,
-      "con" ~ "Control",
-      "exp" ~ "Experimental"
+    arm = case_when(
+      arm == "con" ~ "Control",
+      arm == "exp" ~ "Experimental"
     ),
     arm = factor(arm, levels = c("Control", "Experimental")),
     subject_id = as.numeric(subject_id)
@@ -133,13 +129,13 @@ study_df |>
   )
 ```
 
-At week 1, the two arms look similar, with overlapping values. The experimental arm generally shows increasing observations over time, whereas the control arm fluctuates without a consistent upward trend. Over the 8 weeks, subjects in the experimental arm generally show increasing observations over time, while control subjects stay roughly flat around their starting level but fluctuate week to week. At week 8, every experimental subject has a higher observation than every control subject. There is variation between participants and from week to week within each arm, but the groups separate more clearly over time. This divergence between groups could suggest an effect of the experimental condition.
+At week 1, the observations from the two arms look similar, with overlapping values. Over eight weeks, participants in the experimental arm generally show increasing observations over time, whereas observations in the control arm fluctuate without a consistent upward trend. At week 8, every experimental participant has a higher observation than every control participant. Although trajectories vary between participants within each arm, the groups separate clearly over time. This pattern is consistent with a possible effect of the experimental condition, although the plot alone does not establish causality.
 
 ## Problem 3: Power of a one-sample t-test
 
 ### Simulate samples and tests
 
-The `t_test_sim` function below generates a dataset of size $n = 30$ from a Normal distribution with $\sigma = 5$. The function then performs a one sample t-test of $H_0: \mu = 0$ and extracts the sample mean and p-value.
+The `t_test_sim` function below generates a dataset of size $n = 30$ from a Normal distribution with $\sigma = 5$. The function then performs a one-sample t-test of $H_0: \mu = 0$ and extracts the sample mean and p-value.
 
 ```{r t-test-function}
 t_test_sim = function(mu) {
@@ -172,7 +168,7 @@ power_results =
   sim_results_df |>
   group_by(true_mu) |>
   summarize(
-    power = mean(reject),
+    rejection_prop = mean(reject),
     avg_mu_hat = mean(mu_hat),
     avg_mu_hat_rejected = mean(mu_hat[reject])
   )
@@ -185,7 +181,7 @@ power_results |>
 
 ```{r power-plot}
 power_results |>
-  ggplot(aes(x = true_mu, y = power)) +
+  ggplot(aes(x = true_mu, y = rejection_prop)) +
   geom_point() +
   geom_line() +
   scale_x_continuous(breaks = 0:6) +
@@ -196,7 +192,7 @@ power_results |>
     y = "Power"
   )
 ```
-Power increases with effect size. When the true mean is 0, the null hypothesis is true and the rejection proportion is `r power_results |> filter(true_mu == 0) |> pull(power) |> round(4)`, which aligns closely with the pre-specified type I error rate of 0.05. As the true mean moves away from 0, the effect size ($\mu / \sigma$) increases and the test rejects the null hypothesis more frequently. With sample size and standard deviation held constant, a larger mean generates a stronger signal relative to the standard error. Specifically, power rises from `r power_results |> filter(true_mu == 1) |> pull(power) |> round(4)` at $\mu = 1$ to `r power_results |> filter(true_mu == 2) |> pull(power) |> round(4)` at $\mu = 2$, reaches `r power_results |> filter(true_mu == 3) |> pull(power) |> round(4)` at $\mu = 3$, and approaches 1 for $\mu \ge 4$. Overall, the relationship is S-shaped as power climbs steeply across moderate effect sizes before leveling off near 1 once the effect is large relative to sampling variability..
+Power increases with effect size. When the true mean is 0, the null hypothesis is true and the rejection proportion is `r power_results |> filter(true_mu == 0) |> pull(rejection_prop) |> round(4)`, which aligns closely with the pre-specified type I error rate of 0.05. As the true mean moves away from 0, the effect size ($\mu / \sigma$) increases and the test rejects the null hypothesis more frequently. With sample size and standard deviation held constant, a larger mean generates a stronger signal relative to the standard error. Specifically, power rises from `r power_results |> filter(true_mu == 1) |> pull(rejection_prop) |> round(4)` at $\mu = 1$ to `r power_results |> filter(true_mu == 2) |> pull(rejection_prop) |> round(4)` at $\mu = 2$, reaches `r power_results |> filter(true_mu == 3) |> pull(rejection_prop) |> round(4)` at $\mu = 3$, and approaches 1 for $\mu \ge 4$. Overall, the relationship is S-shaped as power climbs steeply across moderate effect sizes before leveling off near 1 once the effect is large relative to sampling variability.
 
 ### Average estimates vs. true mean
 
@@ -209,10 +205,9 @@ power_results |>
     values_to = "avg_estimate"
   ) |>
   mutate(
-    samples = case_match(
-      samples,
-      "avg_mu_hat" ~ "All samples",
-      "avg_mu_hat_rejected" ~ "Null rejected samples"
+    samples = case_when(
+      samples == "avg_mu_hat" ~ "All samples",
+      samples == "avg_mu_hat_rejected" ~ "Null rejected samples"
     )
   ) |>
   ggplot(aes(x = true_mu, y = avg_estimate, color = samples)) +
@@ -228,8 +223,6 @@ power_results |>
   )
 ```
 
-Across all samples, the average estimated mean is approximately equal to the true mean, as expected because the sample mean is unbiased. Among only the samples where the null was rejected, the average estimated mean is **not** approximately equal to the true mean which in this case is overestimated, likely due to the low to moderate power. For example, at  $\mu = 1$ it is about `r power_results |> filter(true_mu == 1) |> pull(avg_mu_hat_rejected) |> round(4)`, and at  $\mu = 2$ about `r power_results |> filter(true_mu == 2) |> pull(avg_mu_hat_rejected) |> round(4)`.
+Across all samples, the average estimated mean is approximately equal to the true mean, consistent with the sample mean being unbiased. Among samples where the null hypothesis was rejected, the average estimated mean is larger than the true mean for small positive effects. For example, the average estimate conditioned on rejection is approximately `r power_results |> filter(true_mu == 1) |> pull(avg_mu_hat_rejected) |> round(4)` when $\mu = 1$ and `r power_results |> filter(true_mu == 2) |> pull(avg_mu_hat_rejected) |> round(4)` when $\mu = 2$.
 
-A sample only rejects $H_0: \mu = 0$ if its mean is far enough from 0. When the true effect is small, the samples that pass that threshold are the ones whose mean happened to land well above the truth, so conditioning on rejection keeps the overestimates and throws away the rest. As mu grows and power approaches 1, nearly every sample is rejected, so the conditional average converges back to the true mean (from $\mu \ge 4$ the two lines nearly overlap). 
-
-At mu = 0, the rejected samples are split between large positive and large negative estimates, so their average stays near 0, but each of those estimates is far from the truth in absolute value. Effect sizes reported only when they are statistically significant tend to be exaggerated, especially in underpowered studies.
+The two-sided t-test rejects $H_0: \mu = 0$ when the sample mean is sufficiently far from zero (relative to its estimated standard error). When the true positive effect is small, selecting significant results disproportionately retains samples with unusually large positive estimates, although significant negative estimates and underestimates can also occur. This selection inflates the conditional average. As the true mean increases (from $\mu \ge 4$) and power approaches one, almost all samples are retained, so the conditional (Null rejected samples) and unconditional (All samples) averages become nearly identical. When $\mu = 0$, the rejected samples are split between sufficiently extreme positive and negative estimates, so the average estimate among only those stay near 0 ($\hat{\mu} =$ `r power_results |> filter(true_mu == 0) |> pull(avg_mu_hat_rejected) |> round(4)`).
