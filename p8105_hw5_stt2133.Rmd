@@ -181,4 +181,18 @@ power_results |>
   knitr::kable(digits = 3)
 ```
 
+### Effect size and power
 
+```{r power-plot}
+power_results |>
+  ggplot(aes(x = true_mu, y = power)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = 0:6) +
+  labs(
+    title = "Power of a one-sample t-test by true mean",
+    subtitle = "n = 30, σ = 5, α = 0.05",
+    x = "True value of μ",
+    y = "Power"
+  )
+```
