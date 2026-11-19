@@ -154,4 +154,31 @@ t_test_sim = function(mu) {
 }
 ```
 
+```{r sim-results}
+set.seed(1118)
+
+sim_results_df =
+  expand_grid(
+    true_mu = 0:6,
+    iter = 1:5000
+  ) |>
+  mutate(results = map(true_mu, t_test_sim)) |>
+  unnest(results) |>
+  mutate(reject = p_value < 0.05)
+```
+
+```{r power_results}
+power_results =
+  sim_results_df |>
+  group_by(true_mu) |>
+  summarize(
+    power = mean(reject),
+    avg_mu_hat = mean(mu_hat),
+    avg_mu_hat_rejected = mean(mu_hat[reject])
+  )
+
+power_results |>
+  knitr::kable(digits = 3)
+```
+
 
