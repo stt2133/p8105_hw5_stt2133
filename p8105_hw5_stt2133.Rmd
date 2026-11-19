@@ -200,3 +200,31 @@ Power increases with effect size. When the true mean is 0, the null hypothesis i
 
 ### Average estimates vs. true mean
 
+```{r mu_plot}
+power_results |>
+  select(true_mu, avg_mu_hat, avg_mu_hat_rejected) |>
+  pivot_longer(
+    avg_mu_hat:avg_mu_hat_rejected,
+    names_to = "samples",
+    values_to = "avg_estimate"
+  ) |>
+  mutate(
+    samples = case_match(
+      samples,
+      "avg_mu_hat" ~ "All samples",
+      "avg_mu_hat_rejected" ~ "Null rejected samples"
+    )
+  ) |>
+  ggplot(aes(x = true_mu, y = avg_estimate, color = samples)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = 0:6) +
+  scale_y_continuous(breaks = 0:6) +
+  labs(
+    title = "Average estimated mean vs. true mean",
+    x = "True mean (μ)",
+    y = "Average estimated mean (μ̂)",
+    color = "Samples included"
+  )
+```
+
